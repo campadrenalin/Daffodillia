@@ -15,23 +15,43 @@ function renderShape(ctx, color, points) {
 function Flower(x, y) {
     this.x = x;
     this.y = y;
+    this.bend = 0;
     this.height = 0;
+    this.anim = 0;
+    this.bloomed = false;
     flowers.push(this);
 }
-Flower.prototype.adjust = function(y) {
+Flower.prototype.adjust = function(x, y) {
+    this.bend = x - this.x;
+
     var height_wanted = this.y - y;
     if (height_wanted > 0)
         this.height = height_wanted;
 }
 Flower.prototype.bloom = function() {
+    this.bloomed = true;
+}
+Flower.prototype.stemPoints = function() {
+    var w = this.height / 80;
+    var lpoints = [], rpoints = [];
+    var quality = Math.round(this.height / 5);
+    for (var i = 0; i<=quality; i++) {
+        var factor = i/quality;
+        var y = this.y - this.height*factor;
+        var bend = this.bend * factor * factor;
+        lpoints.push([this.x - w*(1-factor) + bend, y]);
+        rpoints.push([this.x + w*(1-factor) + bend, y]);
+    }
+    return lpoints.concat(rpoints.reverse());
 }
 Flower.prototype.render = function(ctx) {
-    var w = this.height / 80;
-    renderShape(ctx, "green", [
-        [this.x + w, this.y],
-        [this.x - w, this.y],
-        [this.x,     this.y - this.height],
-    ]);
+    var stemPoints = [];
+    renderShape(ctx, "green", this.stemPoints());
+    if (bloomed) {
+        // flower
+    } else {
+        // bud
+    }
 }
 
 var canvas = document.getElementsByTagName('canvas')[0];
@@ -44,7 +64,7 @@ canvas.addEventListener('mousedown', function(e) {
 canvas.addEventListener('mousemove', function(e) {
     e.preventDefault();
     if (!currentFlower) return;
-    currentFlower.adjust(e.clientY);
+    currentFlower.adjust(e.clientX, e.clientY);
 });
 canvas.addEventListener('mouseup', function(e) {
     e.preventDefault();
