@@ -9,6 +9,7 @@ function renderShape(ctx, color, points) {
         i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     }
     ctx.fill();
+    ctx.stroke();
     ctx.closePath();
 }
 
@@ -44,14 +45,56 @@ Flower.prototype.stemPoints = function() {
     }
     return lpoints.concat(rpoints.reverse());
 }
+Flower.prototype.innerPetalPoints = function(cap, radiusFactor) {
+    var points = [];
+    var quality = Math.round(this.height / 2);
+    for (var i = 0; i<=quality; i++) {
+        var radius = this.height/150 * radiusFactor * (
+            10 +
+            Math.sin(i/quality*Math.PI*30) +
+            Math.sin(i/quality*Math.PI*20 + this.height)
+        );
+        points.push([
+            cap[0] + Math.sin(i/quality*2*Math.PI)*radius,
+            cap[1] + Math.cos(i/quality*2*Math.PI)*radius,
+        ]);
+    }
+    return points;
+}
+Flower.prototype.outerPetalPoints = function(cap, radiusFactor) {
+    var points = [];
+    var quality = Math.round(this.height / 2);
+    for (var petal = 0; petal < 5; petal++) {
+        var offset = 2*Math.PI/5 * petal + this.height;
+        for (var i = 0; i < quality; i++) {
+            var radius = this.height/5 * Math.sin(i/quality*Math.PI) * radiusFactor;
+            points.push([
+                cap[0] + Math.sin(i/quality*2*Math.PI/3.5 + offset)*radius,
+                cap[1] + Math.cos(i/quality*2*Math.PI/3.5 + offset)*radius,
+            ]);
+        }
+    }
+    return points;
+}
 Flower.prototype.render = function(ctx) {
-    var stemPoints = [];
+    var budtime = 20;
+    var cap = [this.x + this.bend, this.y - this.height];
     renderShape(ctx, "green", this.stemPoints());
-    if (bloomed) {
+    if (this.bloomed && (this.anim > budtime)) {
         // flower
+        var radiusFactor = Math.log10(this.anim-budtime)/3;
+        renderShape(ctx, "yellow", this.outerPetalPoints(cap, radiusFactor));
+        renderShape(ctx, "red",    this.innerPetalPoints(cap, radiusFactor));
     } else {
         // bud
+        var factor = (budtime-this.anim)/budtime;
+        ctx.fillStyle = 'green';
+        ctx.beginPath();
+        ctx.arc(cap[0], cap[1], (this.height/10)*factor*factor, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.closePath();
     }
+    if (this.bloomed) this.anim++;
 }
 
 var canvas = document.getElementsByTagName('canvas')[0];
