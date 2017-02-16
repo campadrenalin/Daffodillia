@@ -97,6 +97,10 @@ Flower.prototype.render = function(ctx) {
     if (this.bloomed) this.anim++;
 }
 
+var maxImage = 4;
+var chosenImage = Math.ceil(Math.random() * maxImage);
+document.getElementsByTagName('img')[0].src = chosenImage + '.jpg';
+
 var canvas = document.getElementsByTagName('canvas')[0];
 var ctx = canvas.getContext('2d');
 
